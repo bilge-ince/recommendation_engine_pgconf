@@ -9,12 +9,11 @@ from sqlalchemy import create_engine, text
 # Custom Header Section
 logo_path = "code/edb_new.png"
 primary_color = "#FF4B33"
-background_color = "#FFFFFF"
+
 
 header_css = f"""
 <style>
 .header {{
-    background-color: {background_color};
     padding: 10px;
     color: white;
 }}
