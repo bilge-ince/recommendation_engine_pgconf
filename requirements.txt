@@ -6,11 +6,8 @@ psycopg2-binary
 SQLAlchemy
 cmake
 clang
-plotly_express
 ipython-sql 
 pandas 
-scikit-learn 
-seaborn 
-matplotlib
+boto3
 
 

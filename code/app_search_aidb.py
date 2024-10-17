@@ -1,10 +1,16 @@
-import streamlit as st
-import psycopg2
-import argparse
-from PIL import Image
+import os
 import io
 import time
+import temp
+import boto3
+import psycopg2
+import argparse
+import streamlit as st
+from PIL import Image
+
+
 from sqlalchemy import create_engine, text
+from botocore.handlers import disable_signing
 
 # Custom Header Section
 logo_path = "code/edb_new.png"
@@ -132,6 +138,15 @@ def get_product_details_in_category(img_id):
             product_details = None
     return product_details
 
+def upload_data_to_s3(file_path, image_name, staging_bucket='recommendation-engine-stage'):
+   
+    s3 = boto3.resource(
+        service_name="s3",
+        endpoint_url='http://s3.eu-central-1.amazonaws.com',
+    )
+    s3.meta.client.meta.events.register("choose-signer.s3.*", disable_signing)
+    bucket = s3.Bucket(staging_bucket)
+    s3.meta.client.upload_file(f'{file_path}', 'recommendation-engine-stage', f'{image_name}')
 
 def search_catalog(text_query):
     conn = st.session_state.db_conn
@@ -238,8 +253,13 @@ with right_column:
                 image_name = uploaded_image.name
                 bytes_data = uploaded_image.getvalue()
                 image = Image.open(io.BytesIO(bytes_data))
+                # streamlit doesn't store the image path but the image and image name itself
+                # however s3 bucket requires image path to upload
+                # therefore, we save the image to a known location and select from that folder
+                path = os.path.join("./dataset/tmp_images", image_name)
                 st.image(image, caption="Uploaded Image", use_column_width=True)
-
+                # upload to tmp s3 bucket
+                upload_data_to_s3(path, image_name)
                 # Generate embeddings for the uploaded image and search
                 start_time = time.time()
                 conn = st.session_state.db_conn
@@ -248,7 +268,7 @@ with right_column:
                 with conn.cursor() as cur:
                     cur.execute(
                         f"""SELECT data from 
-                        aidb.retrieve_via_s3('{st.session_state.retriever_name}', 5, '{st.session_state.s3_bucket_name}', '{image_name}', '{st.session_state.s3_endpoint}');"""
+                        aidb.retrieve_via_s3('{st.session_state.retriever_name}', 5,'recommendation-engine-stage', '{image_name}', '{st.session_state.s3_endpoint}');"""
                     )
 
                     results = cur.fetchall()
@@ -260,7 +280,6 @@ with right_column:
                         st.write(f"Found {len(query_results)} similar items.")
                         for result in query_results:
                             img_id = eval(result)["img_id"]
-
                             product = get_product_details_in_category(img_id)
                             st.write(f"**{product['name']}**")
                             image = Image.open(product["image_path"])
