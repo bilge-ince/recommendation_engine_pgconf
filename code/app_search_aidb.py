@@ -1,7 +1,6 @@
 import os
 import io
 import time
-import temp
 import boto3
 import psycopg2
 import argparse
