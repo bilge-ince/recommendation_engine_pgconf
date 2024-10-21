@@ -7,6 +7,7 @@ import argparse
 import streamlit as st
 from PIL import Image
 
+import db_info
 
 from sqlalchemy import create_engine, text
 from botocore.handlers import disable_signing
@@ -58,16 +59,16 @@ st.markdown("## Powered by EDB Postgres and PGAI")
 
 def create_db_connection():
     return psycopg2.connect(
-        dbname="postgres",
-        user="postgres",
-        password="password",
-        host="localhost",
-        port=15432,
+        dbname=db_info.dbname,
+        user=db_info.user,
+        password=db_info.password,
+        host=db_info.host,
+        port=db_info.port,
     )
 
 
 # Database connection details
-DATABASE_URL = "postgresql://postgres:password@localhost:15432/postgres"
+DATABASE_URL = "postgresql://%s:%s@%s:%s/%s" % (db_info.user, db_info.password, db_info.host, db_info.port, db_info.dbname)
 engine = create_engine(DATABASE_URL)
 
 def load_data_to_db(conn, file_path):

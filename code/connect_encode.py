@@ -1,16 +1,16 @@
 import argparse
 import psycopg2
 import time
-
+import db_info
 
 def _create_db_connection():
         """Create and return a database connection."""
         return psycopg2.connect(
-            dbname="postgres",
-            user="postgres",
-            password="password",
-            host="localhost",
-            port = 15432
+            dbname=db_info.dbname,
+            user=db_info.user,
+            password=db_info.password,
+            host=db_info.host,
+            port = db_info.port
         )
 
 def initialize_database(conn):
