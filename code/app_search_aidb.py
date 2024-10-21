@@ -252,10 +252,12 @@ with right_column:
                 image_name = uploaded_image.name
                 bytes_data = uploaded_image.getvalue()
                 image = Image.open(io.BytesIO(bytes_data))
+                
                 # streamlit doesn't store the image path but the image and image name itself
                 # however s3 bucket requires image path to upload
                 # therefore, we save the image to a known location and select from that folder
                 path = os.path.join("./dataset/tmp_images", image_name)
+                image.save(path,"JPEG")
                 st.image(image, caption="Uploaded Image", use_column_width=True)
                 # upload to tmp s3 bucket
                 upload_data_to_s3(path, image_name)
